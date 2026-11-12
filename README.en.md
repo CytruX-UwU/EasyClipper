@@ -33,6 +33,7 @@ EasyClipper/
 │  ├─ window.py
 │  ├─ config.py
 │  ├─ ffmpeg.py
+│  ├─ output.py
 │  ├─ i18n.py
 │  └─ locales/
 │     ├─ zh_CN.json
@@ -61,6 +62,8 @@ The output uses H.264 video. When audio is included, the first audio track is en
 
 Exports run in the background so the interface stays responsive. Encoding writes to a temporary file in the destination directory, and replaces the destination file only after encoding succeeds. Cancellation or encoding failure leaves any existing destination file intact. Close the app normally so it can clean up temporary files from an active export.
 
+Before saving, the app checks whether the destination was created, modified, or removed during export. Changes require confirmation again. Declining preserves the destination and shows the encoded video's temporary file path so you can save it manually. New destinations use a no-overwrite filesystem operation to protect files created after the check.
+
 Preview playback uses Qt Multimedia, so supported formats depend on its decoding capabilities. Preview errors appear in the interface. If an export fails, expand the error dialog to view the detailed FFmpeg log.
 
 ## Saved preferences
@@ -81,6 +84,8 @@ The app defaults to English when no configuration is available. The default conf
 
 Configuration storage and validation are implemented separately in `easyclipper/config.py`.
 
+Configuration files are limited to 64 KiB. Oversized files, excessive nesting, invalid UTF-8, and malformed JSON fall back to defaults so the app can still start.
+
 ## Language packs
 
 Interface text is stored in `easyclipper/locales/zh_CN.json` (Simplified Chinese) and `easyclipper/locales/en.json` (English), and loaded by `easyclipper/i18n.py`. Restart the app after editing a pack. Both files use the same keys. Keep placeholders such as `{path}`, `{message}`, `{start}`, `{end}`, and `{duration:.3f}` intact when translating.
@@ -89,7 +94,7 @@ FFmpeg logs and raw errors returned by the operating system or decoder remain in
 
 ## Code structure and tests
 
-`easyclipper/window.py` handles the interface and interactions. `easyclipper/ffmpeg.py` locates FFmpeg and builds export arguments. The root-level `main.py` is the main entry point, launched by `run.bat` using `uv run python main.py`. You can also use `uv run easyclipper` or `uv run python -m easyclipper`. All entry points share the startup logic in `easyclipper/__main__.py`.
+`easyclipper/window.py` handles the interface and interactions. `easyclipper/ffmpeg.py` locates FFmpeg and builds export arguments. `easyclipper/output.py` checks for destination changes and saves encoded results. The root-level `main.py` is the main entry point, launched by `run.bat` using `uv run python main.py`. You can also use `uv run easyclipper` or `uv run python -m easyclipper`. All entry points share the startup logic in `easyclipper/__main__.py`.
 
 Run tests from the project directory:
 

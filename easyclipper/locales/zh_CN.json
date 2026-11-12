@@ -52,5 +52,8 @@
   "ok": "确定",
   "show_details": "显示详细信息…",
   "hide_details": "隐藏详细信息…",
-  "config_save_error": "配置保存失败，本次设置仍可使用，但下次启动可能无法恢复：{message}"
+  "config_save_error": "配置保存失败，本次设置仍可使用，但下次启动可能无法恢复：{message}",
+  "output_changed_title": "目标文件已变化",
+  "output_changed_question": "导出期间目标文件被创建、修改或删除，是否仍要保存到此路径？\n{path}",
+  "output_kept": "目标文件未被更改。编码完成的视频保留在：{path}"
 }

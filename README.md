@@ -31,6 +31,7 @@ EasyClipper/
 │  ├─ window.py
 │  ├─ config.py
 │  ├─ ffmpeg.py
+│  ├─ output.py
 │  ├─ i18n.py
 │  └─ locales/
 │     ├─ zh_CN.json
@@ -61,6 +62,8 @@ EasyClipper/
 
 导出在后台运行，界面保持响应。编码先写入目标目录内的临时文件，成功后才替换目标文件；取消或编码失败不会覆盖已有目标文件。请正常关闭窗口，以便清理正在导出的临时文件。
 
+保存前会检查目标文件是否在导出期间被创建、修改或删除。发生变化时需要再次确认；选择不覆盖，会保留目标文件，并显示已编码视频的临时文件路径，供手动另存。新目标路径使用禁止覆盖的文件操作，避免检查后出现的同名文件被覆盖。
+
 预览使用 Qt Multimedia，可播放的格式取决于其解码支持。若文件预览失败，界面会显示原因。导出失败时可展开对话框中的详细 FFmpeg 日志。
 
 ## 配置保存
@@ -81,6 +84,8 @@ EasyClipper/
 
 配置读写与校验在 `easyclipper/config.py` 中实现。
 
+配置文件最大为 64 KiB。超大文件、过深嵌套、无效 UTF-8 编码或损坏的 JSON 会使用默认配置继续启动。
+
 ## 语言包
 
 界面文字保存在 `easyclipper/locales/zh_CN.json`（简体中文）和 `easyclipper/locales/en.json`（英文）中，由 `easyclipper/i18n.py` 加载。修改对应文件后重新启动即可应用。两个文件使用相同的键名；翻译时请保留 `{path}`、`{message}`、`{start}`、`{end}`、`{duration:.3f}` 等占位符。
@@ -89,7 +94,7 @@ FFmpeg 日志和操作系统或解码器返回的原始错误信息保留其原�
 
 ## 代码结构与测试
 
-`easyclipper/window.py` 负责界面和交互，`easyclipper/ffmpeg.py` 负责查找 FFmpeg 和构造导出参数。根目录的 `main.py` 是主程序入口，`run.bat` 通过 `uv run python main.py` 启动它。也支持 `uv run easyclipper` 或 `uv run python -m easyclipper`，这些入口共用 `easyclipper/__main__.py` 中的启动逻辑。
+`easyclipper/window.py` 负责界面和交互，`easyclipper/ffmpeg.py` 负责查找 FFmpeg 和构造导出参数，`easyclipper/output.py` 负责检查目标文件变化和保存编码结果。根目录的 `main.py` 是主程序入口，`run.bat` 通过 `uv run python main.py` 启动它。也支持 `uv run easyclipper` 或 `uv run python -m easyclipper`，这些入口共用 `easyclipper/__main__.py` 中的启动逻辑。
 
 在项目目录运行测试：
 

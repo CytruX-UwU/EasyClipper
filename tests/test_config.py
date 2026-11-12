@@ -10,7 +10,7 @@ from unittest.mock import patch
 from PySide6.QtWidgets import QApplication
 from shiboken6 import delete
 
-from easyclipper.config import ConfigStore, Preferences
+from easyclipper.config import ConfigStore, MAX_CONFIG_BYTES, Preferences
 import easyclipper.window as ec
 
 
@@ -86,6 +86,17 @@ class ConfigTests(unittest.TestCase):
                 self.store.save(Preferences("en", 8000, False))
         self.assertEqual(self.path.read_bytes(), previous)
         self.assertEqual(list(self.folder.glob(".easyclipper-config-*.tmp")), [])
+
+    def test_oversized_deeply_nested_and_invalid_utf8_configs_use_defaults(self):
+        for raw in (b" " * (MAX_CONFIG_BYTES + 1),
+                    b"[" * 10000 + b"0" + b"]" * 10000,
+                    b"\xff\xfe\xff"):
+            with self.subTest(size=len(raw)):
+                self.path.write_bytes(raw)
+                self.assertEqual(self.store.load(), Preferences())
+                window = self.window()
+                self.assertEqual(window.language, "en")
+                self.assertEqual(window.bitrate.value(), 5000)
 
     def test_save_error_is_visible_and_can_recover(self):
         window = self.window()

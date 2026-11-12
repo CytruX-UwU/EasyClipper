@@ -52,5 +52,8 @@
   "ok": "OK",
   "show_details": "Show details…",
   "hide_details": "Hide details…",
-  "config_save_error": "Could not save preferences. Current settings remain usable, but may not be restored next time: {message}"
+  "config_save_error": "Could not save preferences. Current settings remain usable, but may not be restored next time: {message}",
+  "output_changed_title": "Destination changed",
+  "output_changed_question": "The destination was created, modified, or removed during export. Save to this path anyway?\n{path}",
+  "output_kept": "Destination left unchanged. Encoded video kept at: {path}"
 }

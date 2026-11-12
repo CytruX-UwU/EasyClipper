@@ -8,6 +8,8 @@ import tempfile
 
 from .i18n import LANGUAGES
 
+MAX_CONFIG_BYTES = 64 * 1024
+
 
 @dataclass
 class Preferences:
@@ -23,8 +25,12 @@ class ConfigStore:
     def load(self) -> Preferences:
         preferences = Preferences()
         try:
-            data = json.loads(self.path.read_text(encoding="utf-8-sig"))
-        except (OSError, ValueError):
+            with self.path.open("rb") as stream:
+                raw = stream.read(MAX_CONFIG_BYTES + 1)
+            if len(raw) > MAX_CONFIG_BYTES:
+                return preferences
+            data = json.loads(raw.decode("utf-8-sig"))
+        except (OSError, ValueError, RecursionError):
             return preferences
         if not isinstance(data, dict):
             return preferences

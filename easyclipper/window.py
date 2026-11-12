@@ -20,6 +20,7 @@ from . import ROOT
 from .config import ConfigStore, Preferences
 from .ffmpeg import export_args, find_ffmpeg
 from .i18n import LANGUAGES, load_language
+from .output import DestinationChanged, FileState, file_state, publish_output
 
 
 def timestamp(milliseconds: int) -> str:
@@ -49,6 +50,7 @@ class Window(QMainWindow):
         self.process: QProcess | None = None
         self.temp_output: Path | None = None
         self.output: Path | None = None
+        self.output_state: FileState | None = None
         self.cancelled = False
         self.log = ""
         self.progress_buffer = ""
@@ -353,7 +355,12 @@ class Window(QMainWindow):
         if output == self.source or (output.exists() and os.path.samefile(output, self.source)):
             self.warning("cannot_export", self.text("same_path"))
             return
-        if output.exists():
+        try:
+            output_state = file_state(output)
+        except OSError as error:
+            self.warning("create_failed", str(error))
+            return
+        if output_state is not None:
             if not self.question("overwrite", self.text("overwrite_question", path=output)):
                 return
         try:
@@ -364,6 +371,7 @@ class Window(QMainWindow):
             return
         self.temp_output = Path(name)
         self.output = output
+        self.output_state = output_state
         self.export_duration = self.end.value() - self.start.value()
         self.log = ""
         self.progress_buffer = ""
@@ -423,7 +431,18 @@ class Window(QMainWindow):
         success = code == 0 and status == QProcess.ExitStatus.NormalExit and not self.cancelled
         if success and self.temp_output and self.output:
             try:
-                os.replace(self.temp_output, self.output)
+                while True:
+                    try:
+                        publish_output(self.temp_output, self.output, self.output_state)
+                        break
+                    except DestinationChanged:
+                        # Snapshot before the modal dialog; check again after confirmation.
+                        current_state = file_state(self.output)
+                        if not self.question("output_changed_title", self.text("output_changed_question", path=self.output)):
+                            self.progress.setValue(100)
+                            self.set_status("output_kept", path=self.temp_output)
+                            return
+                        self.output_state = current_state
             except OSError as error:
                 self.set_status("save_error_status", path=self.temp_output)
                 self.warning("save_failed", str(error))
