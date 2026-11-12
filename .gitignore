@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+ffmpeg.exe
+ffprobe.exe
+ffmpeg/
+*.partial.mp4
+config.json
+.easyclipper-config-*.tmp
